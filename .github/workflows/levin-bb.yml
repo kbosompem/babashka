@@ -1,0 +1,78 @@
+name: levin-bb
+
+on:
+  push:
+    branches: [levin-features]
+    tags: ['levin-bb-v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            platform: macos-aarch64
+          - os: ubuntu-22.04
+            platform: linux-amd64
+          - os: ubuntu-24.04-arm
+            platform: linux-aarch64
+    runs-on: ${{ matrix.os }}
+    env:
+      BABASHKA_FEATURE_DATALEVIN: "true"
+      BABASHKA_FEATURE_CORE_LOGIC: "true"
+      BABASHKA_XMX: "-J-Xmx6g"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install leiningen (macOS)
+        if: runner.os == 'macOS'
+        run: brew install leiningen
+
+      - name: Install leiningen (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo curl -sLo /usr/local/bin/lein \
+            https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein
+          sudo chmod +x /usr/local/bin/lein
+          lein version
+
+      - name: Build uberjar
+        run: |
+          export GRAALVM_HOME="$JAVA_HOME"
+          bash script/uberjar
+
+      - name: Compile native image
+        run: |
+          export GRAALVM_HOME="$JAVA_HOME"
+          bash script/compile
+
+      - name: Smoke test
+        run: |
+          ./bb -e "(require '[datalevin.core :as d] '[clojure.core.logic :as l] '[clojure.core.logic.fd :as fd]) (println :nses-ok)"
+          ./bb -e "(require '[clojure.core.logic :as l]) (prn (l/run* [q] (l/membero q [1 2 3])))"
+
+      - name: Package
+        run: |
+          mv bb levin-bb
+          tar czf "levin-bb-${{ matrix.platform }}.tar.gz" levin-bb
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: levin-bb-${{ matrix.platform }}
+          path: levin-bb-*.tar.gz
+
+      - name: Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/levin-bb-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: levin-bb-*.tar.gz
