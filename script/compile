@@ -67,6 +67,13 @@ if [ "$BABASHKA_STATIC" = "true" ]; then
     fi
 fi
 
+BABASHKA_FEATURE_DATALEVIN=${BABASHKA_FEATURE_DATALEVIN:-}
+
+if [ "$BABASHKA_FEATURE_DATALEVIN" = "true" ]; then
+    # datalevin deps (nippy/jraft/zstd) touch slf4j during build-time class init
+    args+=("--initialize-at-build-time=org.slf4j")
+fi
+
 BABASHKA_FEATURE_HSQLDB=${BABASHKA_FEATURE_HSQLDB:-}
 
 if [ "$BABASHKA_FEATURE_HSQLDB" = "true" ]; then
@@ -115,6 +122,14 @@ then
         export BABASHKA_SHA=$sha
     fi
 fi
+
+# The image builder sanitizes its environment; feature flags are read via
+# System/getenv during build-time class init, so pass them through explicitly.
+while IFS='=' read -r k _; do
+    case "$k" in
+        BABASHKA_*) args+=("-E$k");;
+    esac
+done < <(env)
 
 detected_graalvm_version=$("$GRAALVM_HOME/bin/native-image" "--version")
 
