@@ -12,17 +12,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # macos-14 runners have 7GB RAM: tight heap + fewer compiler
+          # threads to keep the peak under the ceiling
           - os: macos-14
             platform: macos-aarch64
+            xmx: "-J-Xmx7g"
+            ni-args: "-H:NumberOfThreads=2"
           - os: ubuntu-22.04
             platform: linux-amd64
+            xmx: "-J-Xmx12g"
+            ni-args: ""
           - os: ubuntu-24.04-arm
             platform: linux-aarch64
+            xmx: "-J-Xmx12g"
+            ni-args: ""
     runs-on: ${{ matrix.os }}
     env:
       BABASHKA_FEATURE_DATALEVIN: "true"
       BABASHKA_FEATURE_CORE_LOGIC: "true"
-      BABASHKA_XMX: "-J-Xmx6g"
+      BABASHKA_XMX: ${{ matrix.xmx }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -54,7 +62,7 @@ jobs:
       - name: Compile native image
         run: |
           export GRAALVM_HOME="$JAVA_HOME"
-          bash script/compile
+          bash script/compile ${{ matrix.ni-args }}
 
       - name: Smoke test
         run: |
