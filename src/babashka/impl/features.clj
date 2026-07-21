@@ -25,6 +25,8 @@
 (def oracledb? (= "true" (System/getenv "BABASHKA_FEATURE_ORACLEDB")))
 (def hsqldb? (= "true" (System/getenv "BABASHKA_FEATURE_HSQLDB")))
 (def datascript? (= "true" (System/getenv "BABASHKA_FEATURE_DATASCRIPT")))
+(def datalevin? (= "true" (System/getenv "BABASHKA_FEATURE_DATALEVIN")))
+(def core-logic? (= "true" (System/getenv "BABASHKA_FEATURE_CORE_LOGIC")))
 (def lanterna? (= "true" (System/getenv "BABASHKA_FEATURE_LANTERNA")))
 (def spec-alpha? (= "true" (System/getenv "BABASHKA_FEATURE_SPEC_ALPHA")))
 (def rrb-vector? (= "true" (System/getenv "BABASHKA_FEATURE_RRB_VECTOR")))
@@ -47,6 +49,12 @@
 
 (when datascript?
   (require '[babashka.impl.datascript]))
+
+(when datalevin?
+  (require '[babashka.impl.datalevin]))
+
+(when core-logic?
+  (require '[babashka.impl.core-logic]))
 
 (when httpkit-client?
   (require '[babashka.impl.httpkit-client]))

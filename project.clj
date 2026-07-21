@@ -77,6 +77,15 @@
                                :dependencies [[com.cognitect/transit-clj "1.1.357"]]}
              :feature/datascript {:source-paths ["feature-datascript"]
                                   :dependencies [[datascript "1.3.10"]]}
+             :feature/datalevin {:source-paths ["feature-datalevin"]
+                                 :dependencies [[datalevin "0.10.18"
+                                                 :exclusions [org.babashka/sci]]
+                                                ;; nippy 3.7.0 needs newer encore than timbre pulls in
+                                                [com.taoensso/encore "3.160.1"]]
+                                 :jvm-opts ["--add-opens=java.base/java.nio=ALL-UNNAMED"
+                                            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED"]}
+             :feature/core-logic {:source-paths ["feature-core-logic"]
+                                  :dependencies [[org.clojure/core.logic "1.1.0"]]}
              :feature/httpkit-client {:source-paths ["feature-httpkit-client"]
                                       :dependencies [[http-kit "2.9.0-beta1"]]}
              :feature/httpkit-server {:source-paths ["feature-httpkit-server"]
