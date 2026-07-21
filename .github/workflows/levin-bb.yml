@@ -12,12 +12,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # macos-14 runners have 7GB RAM: tight heap + fewer compiler
-          # threads to keep the peak under the ceiling
-          - os: macos-14
-            platform: macos-aarch64
-            xmx: "-J-Xmx7g"
-            ni-args: "-H:NumberOfThreads=2"
+          # Free arm64 mac runners (7GB) cannot fit this build (~8GB builder
+          # heap); macos-aarch64 binaries are built locally for now. The
+          # Intel runner has 14GB and covers mac-x64.
+          - os: macos-15-intel
+            platform: macos-x64
+            xmx: "-J-Xmx10g"
+            ni-args: ""
           - os: ubuntu-22.04
             platform: linux-amd64
             xmx: "-J-Xmx12g"
